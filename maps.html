@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      html, body, #map {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      #legend{
+            background-color: white;
+            padding: 10px;
+      }
+
+    </style>
+
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js"></script>
+    
+  </head>
+  <body>
+    
+    <div id="map"></div>
+    <div id="legend"></div>
+
+
+    <script type="text/javascript">
+       //populate legend with content
+      function populateLegend(){
+          var legend = document.getElementById('legend');
+          var div = document.createElement('div');
+
+          div.innerHTML = div.innerHTML + '<strong>MyCo Legend</strong><p><img src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> ' + "HeadQuarters</p>";
+
+          div.innerHTML = div.innerHTML + '<p><img src="http://maps.google.com/mapfiles/ms/icons/red-dot.png"> ' + "Distribution Facility</p>";
+          
+          legend.appendChild(div);
+          
+          div.innerHTML = div.innerHTML + '<p><img src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"> ' + "Call Center</p>";
+          
+          div.innerHTML = div.innerHTML + '<p><img src="http://maps.google.com/mapfiles/ms/icons/green-dot.png"> ' + "Retails Location</p>";
+          
+          legend.appendChild(div);
+
+        }
+
+      //initialize maps
+      function initializeMaps() {
+        var mapOptions = {
+          zoom: 10,
+          center: {lat: 37.542571, lng: -121.993037},
+          mapTypeId: google.maps.MapTypeId.TERRAIN
+        };
+
+        map = new google.maps.Map(document.getElementById('map'),
+            mapOptions);
+        map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(
+            document.getElementById('legend'));
+      };
+      
+
+      $(document).ready(function() {
+        //1. initialize maps
+        initializeMaps();
+
+        //2. popluate legend content
+        populateLegend();
+
+        //3. read json file
+        $.getJSON("location.json", function(json) {
+
+          //parse through locations
+          $.each(json.locations.location, function(key, data) {
+            //get location from data json object - data.latitude, data.longitude
+            var latLng = new google.maps.LatLng(data.latitude, data.longitude); 
+
+            //create circle as per revenue
+            var cityCircle = new google.maps.Circle({
+              strokeColor: '#FF0000',
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: '#FF0000',
+              fillOpacity: 0.35,
+              map: map,
+              center : {lat: data.latitude, lng: data.longitude},
+              radius: Math.sqrt(data.$revenue)/5
+            });
+
+            //marker image based on type of facility - data.type
+            switch(data.type){
+                case 'Distribution Facility':
+                  var image = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+                break;
+
+                case 'RetailLocation':
+                var image = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
+                break;
+
+                case 'Call Center':
+                var image = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+                break;
+
+                case 'HeadQuarters':
+                var image = 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
+                break;
+            }
+            // Creating a marker and putting it on the map
+            var marker = new google.maps.Marker({
+                position: latLng,
+                title: data.type,
+                icon: image
+            });
+            marker.setMap(map);
+            
+          });
+            
+        });
+        //end reading file
+        
+      });//end document.ready
+      
+    </script>
+  </body>
+</html>
